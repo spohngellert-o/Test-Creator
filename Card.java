@@ -13,17 +13,20 @@ public class Card
     private JPanel card;
     private JTextField[] input;
     private JButton apply, done;
+    private JRadioButton[] correct;
     Question currQuestion;
     Question [] questions;
     EventTesterPanel eventTester;
     String fileName, extension;
+    private int correctAnswer;
     int versions;
     //Card(Container pane, String label2, EveventTEsterPanel etp, String fileName, String extension, int versions)
     //constructor
     public Card(Container pane, String label2, EventTesterPanel etp, String fileName, String extension, int versions)
     {
-        //set's the panel to grid layout
-        GridLayout grid = new GridLayout(8, 2);
+        correctAnswer = -1;
+        //sets the panel to grid layout
+        GridLayout grid = new GridLayout(6, 1);
         //sets the gaps between parts of the grid
         grid.setVgap(5);
         grid.setHgap(5);
@@ -34,8 +37,11 @@ public class Card
         label = new JLabel("Question");
         //sets the font to calibri size 18
         label.setFont(new Font("Calibri", Font.PLAIN, 18));
+        JPanel labels = new JPanel(grid);
+        labels.setPreferredSize(new Dimension(120, 350));
         card = new JPanel(grid);
-        input = new JTextField[7];
+        card.setPreferredSize(new Dimension(330, 350));
+        input = new JTextField[6];
         apply = new JButton("Add Question");
         apply.setFont(new Font("Calibri", Font.PLAIN, 18));
         done = new JButton("Done");
@@ -44,33 +50,40 @@ public class Card
         questions = new Question[0];
         eventTester=etp;
         //adds the label and first text field
-        card.add(label);
+        labels.add(label);
         input[0] = new JTextField(18);
         card.add(input[0]);
         //adds all the jtextfields to the panel, along with labels
-        for(int i = 1; i<7; i++)
+        for(int i = 1; i<6; i++)
         {
-            if(i != 6) {
                 //adds jtextfield
                 JLabel curLabel = new JLabel("Answer Choice " + i);
                 curLabel.setFont(new Font("Calibri", Font.PLAIN, 18));
-                card.add(curLabel);
+                labels.add(curLabel);
                 input[i]=new JTextField(12);
                 card.add(input[i]);
-            }
-            else {
-                JLabel curLabel = new JLabel("Number of Correct Answer");
-                curLabel.setFont(new Font("Calibri", Font.PLAIN, 18));
-                card.add(curLabel);
-                input[i] = new JTextField(12);
-                card.add(input[i]);
-            }
+        }
+        GridLayout grid3 = new GridLayout(6, 1);
+        JPanel rButtons = new JPanel(grid3);
+        rButtons.add(new JLabel(" "));
+        correct = new JRadioButton[5];
+        for(int i = 0; i < 5; i++) {
+            correct[i] = new JRadioButton();
+            correct[i].addActionListener(new AListener());
+            rButtons.add(correct[i]);
         }
         //adds buttons
-        card.add(apply);
-        card.add(done);
+        GridLayout grid2 = new GridLayout(1, 2);
+        JPanel buttonPart = new JPanel(grid2);
+        buttonPart.setPreferredSize(new Dimension(500, 50));
+
+        buttonPart.add(apply);
+        buttonPart.add(done);
         //adds card to pane
-        pane.add(card, BorderLayout.CENTER);
+        pane.add(buttonPart, BorderLayout.SOUTH);
+        pane.add(rButtons, BorderLayout.WEST);
+        pane.add(labels, BorderLayout.CENTER);
+        pane.add(card, BorderLayout.EAST);
         //adds actionListeners to buttons
         apply.addActionListener(new AListener());
         done.addActionListener(new AListener());
@@ -92,6 +105,14 @@ public class Card
     {
         public void actionPerformed(ActionEvent e)
         {
+            for(int i = 0; i < correct.length; i++) {
+                if(e.getSource().equals(correct[i])) {
+                    correctAnswer = i + 1;
+                }
+                else {
+                    correct[i].setSelected(false);
+                }
+            }
             //if apply is pressed
             if (e.getSource().equals(apply))
             {
@@ -104,14 +125,15 @@ public class Card
                 {
                     currQuestion.setAnswer(i, input[i+1].getText());
                 }
-                currQuestion.setCorrectAnswer(input[6].getText());
+                currQuestion.setCorrectAnswer(correctAnswer);
+
                 //adds the new question to the list, and resets the rest
                 questions = addQuestion(currQuestion);
                 currQuestion = new Question();
                 clearTextFields();
                 }
                 else {
-                    JOptionPane.showMessageDialog(null, "Error in entering question.");
+                    JOptionPane.showMessageDialog(null, "Please select a correct answer.");
                 }
             }
             //if done is pressed
@@ -144,24 +166,16 @@ public class Card
             for(int i = 0; i<qs.length; i++)
             {
                 //adds each answer to the string
-                temp += "" + (i+1) + ". " + qs[i].getCorrectAnswer() + "\n";
+                temp += "" + (i+1) + ". " + qs[i].getCorrectAnswer() + "\r\n";
             }
             return temp;
         }
         //checks whether or not the question input is valid
         public boolean checkValid() {
-            String answer = input[6].getText();
-            return isInt(answer) && !(answer.equals(""));
-        }
-        //checks whether input string is an int
-        public boolean isInt(String input) {
-            if(input.length() == 0) {
-                return true;
+            if(correctAnswer == -1) {
+                return false;
             }
-            else {
-                int ascii = (int) input.charAt(0);
-                return ascii >= 48 && ascii <= 57 && isInt(input.substring(1, input.length()));
-            }
+            return !input[correctAnswer].getText().equals("");
         }
         //scrambleQuestions(Question qs[])
         //srambles the questions

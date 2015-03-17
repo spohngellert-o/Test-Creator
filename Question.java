@@ -9,7 +9,7 @@ public class Question
 {
     private String question;
     private ArrayList <String> answers;
-    private String correctAnswer;
+    private int correctAnswer;
     /*Question()
      * constructor
      * Olie Spohngellert*/
@@ -22,7 +22,7 @@ public class Question
         for(int i = 0; i<5; i++)
             answers.add(i, new String());
         //creates the correctAnswer
-        correctAnswer = "";
+        correctAnswer = -1;
     }
     //getAnswers()
     //gets the answer array list
@@ -39,13 +39,13 @@ public class Question
     }
     /*public String getCorrectAnswer
      * gets the correct answer*/
-    public String getCorrectAnswer()
+    public int getCorrectAnswer()
     {
         return correctAnswer;
     }
     /*setCorrectAnswer
      * sets the correct answer*/
-    public void setCorrectAnswer(String answer)
+    public void setCorrectAnswer(int answer)
     {
         correctAnswer = answer;
     }
@@ -57,7 +57,7 @@ public class Question
     }
     //Question(String question1, ArrayList<String> answers1, String answerIndex1)
     //alternate constructor
-    public Question(String question1, ArrayList<String> answers1, String answerIndex1)
+    public Question(String question1, ArrayList<String> answers1, int answerIndex1)
     {
         question = question1;
         answers=answers1;
@@ -83,12 +83,12 @@ public class Question
         //strips out the empty answers from the arraylist
         stripEmpty();
         //Creates a string, adds the question and a new line
-        String returnable = question + "\n";
+        String returnable = question + "\r\n";
         for(int i = 0; i<answers.size(); i++)
             //adds all the answers and a new line each time
-            returnable+= i+1 + ")" + answers.get(i) + "\n";
+            returnable+= i+1 + ")" + answers.get(i) + "\r\n";
         //returns
-        return returnable;
+        return returnable + "\r\n";
     }
     /*toString2
      * alternate toString formulator*/
@@ -97,13 +97,13 @@ public class Question
         //strips out empty answers
         stripEmpty();
         //adds the question
-        String returnable = question + "\n";
+        String returnable = question + "\r\n";
         for(int i = 0; i<answers.size(); i++) {
             //adds the answers
-            returnable+= "\t" + (i+1) + ")" + answers.get(i) + "\n";
+            returnable+= "\t" + (i+1) + ")" + answers.get(i) + "\r\n";
         }
         //returns
-        return returnable;
+        return returnable + "\r\n";
     }
     //scrambles the answers within the code
     public void scrambleAnswers() {
@@ -114,13 +114,13 @@ public class Question
             //random indecies
             int r1 = random.nextInt(10000)%answers.size();
             int r2 = random.nextInt(10000)%answers.size();
-            int ans = Integer.parseInt(correctAnswer) - 1;
+            int ans = correctAnswer;
             //checks if the correct answer is or isn't one of the others, if it is it resets it
             if(ans == r1) {
-                correctAnswer = Integer.toString(r2 + 1);
+                correctAnswer = r2 + 1;
             }
             if(ans == r2) {
-                correctAnswer = Integer.toString(r1 + 1);
+                correctAnswer = r1 + 1;
             }
             //switches the answers
             String temp = answers.get(r1);
