@@ -12,10 +12,13 @@ public class Card
     private JLabel label;
     private JPanel card;
     private JTextField[] input;
-    private JButton apply, done;
+    private JButton apply, done, toggle;
     private JRadioButton[] correct;
-    Question currQuestion;
-    Question [] questions;
+    private boolean inMulti;
+    private int questionNumber;
+    JQuestion curr;
+    JQuestion currQuestion;
+    JQuestion [] questions;
     EventTesterPanel eventTester;
     String fileName, extension;
     private int correctAnswer;
@@ -24,30 +27,32 @@ public class Card
     //constructor
     public Card(Container pane, String label2, EventTesterPanel etp, String fileName, String extension, int versions)
     {
+        inMulti = false;
         correctAnswer = -1;
         //sets the panel to grid layout
         GridLayout grid = new GridLayout(6, 1);
         //sets the gaps between parts of the grid
         grid.setVgap(5);
         grid.setHgap(5);
+        questionNumber = 1;
         //sets instance variables
         this.versions = versions;
         this.fileName = fileName;
         this.extension = extension;
-        label = new JLabel("Question");
+        label = new JLabel("Question " + questionNumber);
         //sets the font to calibri size 18
         label.setFont(new Font("Calibri", Font.PLAIN, 18));
         JPanel labels = new JPanel(grid);
-        labels.setPreferredSize(new Dimension(120, 350));
+        labels.setPreferredSize(new Dimension(120, 330));
         card = new JPanel(grid);
-        card.setPreferredSize(new Dimension(330, 350));
+        card.setPreferredSize(new Dimension(330, 330));
         input = new JTextField[6];
-        apply = new JButton("Add Question");
+        apply = new JButton("Save Question");
         apply.setFont(new Font("Calibri", Font.PLAIN, 18));
-        done = new JButton("Done");
+        done = new JButton("Finish Test");
         done.setFont(new Font("Calibri", Font.PLAIN, 18));
         currQuestion = new Question();
-        questions = new Question[0];
+        questions = new JQuestion[0];
         eventTester=etp;
         //adds the label and first text field
         labels.add(label);
@@ -56,12 +61,12 @@ public class Card
         //adds all the jtextfields to the panel, along with labels
         for(int i = 1; i<6; i++)
         {
-                //adds jtextfield
-                JLabel curLabel = new JLabel("Answer Choice " + i);
-                curLabel.setFont(new Font("Calibri", Font.PLAIN, 18));
-                labels.add(curLabel);
-                input[i]=new JTextField(12);
-                card.add(input[i]);
+            //adds jtextfield
+            JLabel curLabel = new JLabel("Answer Choice " + i);
+            curLabel.setFont(new Font("Calibri", Font.PLAIN, 18));
+            labels.add(curLabel);
+            input[i]=new JTextField(12);
+            card.add(input[i]);
         }
         GridLayout grid3 = new GridLayout(6, 1);
         JPanel rButtons = new JPanel(grid3);
@@ -73,11 +78,17 @@ public class Card
             rButtons.add(correct[i]);
         }
         //adds buttons
-        GridLayout grid2 = new GridLayout(1, 2);
+        GridLayout grid2 = new GridLayout(1, 3);
+        grid2.setVgap(5);
+        grid2.setHgap(5);
+        toggle = new JButton("<html><p style='margin-top: 0px'>Begin multi-part question</p></html>");
+        toggle.setFont(new Font("Calibri", Font.PLAIN, 18));
+        toggle.addActionListener(new AListener());
         JPanel buttonPart = new JPanel(grid2);
-        buttonPart.setPreferredSize(new Dimension(500, 50));
+        buttonPart.setPreferredSize(new Dimension(500, 60));
 
         buttonPart.add(apply);
+        buttonPart.add(toggle);
         buttonPart.add(done);
         //adds card to pane
         pane.add(buttonPart, BorderLayout.SOUTH);
@@ -113,24 +124,66 @@ public class Card
                     correct[i].setSelected(false);
                 }
             }
+            if(e.getSource().equals(toggle)) {
+                if(!inMulti) {
+                    curr = new MultiPart();
+                    toggle.setText("<html>End multi-part question</html>");
+                    done.setEnabled(false);
+                    inMulti = true;
+                    //checks if the question is valid to add
+                    boolean valid = checkValid();
+                    if(valid) {
+                        //sets the question
+                        currQuestion.setQuestion2(input[0].getText());
+                        for(int i = 0; i<5; i++)
+                        {
+                            currQuestion.setAnswer(i, input[i+1].getText());
+                        }
+                        currQuestion.setCorrectAnswer(correctAnswer);
+                        curr.addQuestion(currQuestion);
+
+                        //adds the new question to the list, and resets the rest
+
+                        currQuestion = new Question();
+                        clearTextFields();
+                    }
+                }
+                else {
+                    inMulti = false;
+                    questions = addQuestion(curr);
+                    curr = null;
+                    done.setEnabled(true);
+                }
+            }
             //if apply is pressed
             if (e.getSource().equals(apply))
             {
                 //checks if the question is valid to add
                 boolean valid = checkValid();
                 if(valid) {
-                //sets the question
-                currQuestion.setQuestion2(input[0].getText());
-                for(int i = 0; i<5; i++)
-                {
-                    currQuestion.setAnswer(i, input[i+1].getText());
-                }
-                currQuestion.setCorrectAnswer(correctAnswer);
+                    questionNumber++;
+                    label.setText("Question " + questionNumber);
+                    
+                    //sets the question
+                    currQuestion.setQuestion2(input[0].getText());
+                    for(int i = 0; i<5; i++)
+                    {
+                        currQuestion.setAnswer(i, input[i+1].getText());
+                    }
+                    System.out.println(correctAnswer);
+                    currQuestion.setCorrectAnswer(correctAnswer);
+                    correctAnswer = -1;
+                    if(!inMulti) {
 
-                //adds the new question to the list, and resets the rest
-                questions = addQuestion(currQuestion);
-                currQuestion = new Question();
-                clearTextFields();
+                        //adds the new question to the list, and resets the rest
+                        questions = addQuestion(currQuestion);
+                    }
+                    else {
+                        curr.addQuestion(currQuestion);
+                    }
+                    currQuestion = new Question();
+                    clearTextFields();
+
                 }
                 else {
                     JOptionPane.showMessageDialog(null, "Please select a correct answer.");
@@ -149,24 +202,28 @@ public class Card
         }
         //toString(Question[] qs)
         //Creates a test based on a question array
-        public String toString(Question [] qs)
+        public String toString(JQuestion [] qs)
         {
             String temp = "";
+            int qNumber = 1;
             for(int i = 0; i<qs.length; i++)
             {
                 //adds each question in a string to the string
-                temp += "" + (i+1) + ". " + qs[i].toString2();
+                temp += qs[i].toString2(qNumber);
+                qNumber = qs[i].incQNumber(qNumber);
             }
             return temp;
         }
         //Makes a string for the answer key
-        public String toStringKey(Question [] qs)
+        public String toStringKey(JQuestion [] qs)
         {
             String temp = "";
+            int qNumber = 1;
             for(int i = 0; i<qs.length; i++)
             {
                 //adds each answer to the string
-                temp += "" + (i+1) + ". " + qs[i].getCorrectAnswer() + "\r\n";
+                temp += qs[i].makeKey(qNumber);
+                qNumber = qs[i].incQNumber(qNumber);
             }
             return temp;
         }
@@ -179,7 +236,7 @@ public class Card
         }
         //scrambleQuestions(Question qs[])
         //srambles the questions
-        public Question[] scrambleQuestions(Question qs[])
+        public JQuestion[] scrambleQuestions(JQuestion qs[])
         {
             //creates a random
             Random random = new Random();
@@ -189,16 +246,16 @@ public class Card
                 int r1 = random.nextInt(10000)%qs.length;
                 int r2 = random.nextInt(10000)%qs.length;
                 //switches them
-                Question temp = qs[r1];
+                JQuestion temp = qs[r1];
                 qs[r1] = qs[r2];
                 qs[r2] = temp;
             }
             return qs;
         }
         //adds a question to the array of questions
-        public Question[] addQuestion(Question q) {
+        public JQuestion[] addQuestion(JQuestion q) {
             int length = questions.length + 1;
-            Question [] temp = new Question [length];
+            JQuestion [] temp = new JQuestion [length];
             for(int i = 0; i < length - 1; i++){
                 temp[i] = questions[i];
             }

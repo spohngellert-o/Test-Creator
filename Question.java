@@ -5,7 +5,20 @@ import java.awt.event.*;
 import java.awt.*;
 
 import javax.swing.*;
-public class Question
+
+interface JQuestion {
+    void setQuestion2(String question);
+    void setAnswer(int i, String answer);
+    void setCorrectAnswer(int i);
+    void scrambleAnswers();
+    String toString2(int qNumber);
+    int getCorrectAnswer();
+    int incQNumber(int qNumber);
+    void addQuestion(JQuestion question);
+    String makeKey(int qNumber);
+    
+}
+public class Question implements JQuestion
 {
     private String question;
     private ArrayList <String> answers;
@@ -69,6 +82,9 @@ public class Question
     {
         question = question2;
     }
+    public void addQuestion(JQuestion question) {
+        throw new RuntimeException("Not right");
+    }
     /*setAnswer(int i, String answer1
      * sets a specific answer
      * i-index of answer(-1), answer-answer to be set to*/
@@ -92,18 +108,24 @@ public class Question
     }
     /*toString2
      * alternate toString formulator*/
-    public String toString2()
+    public String toString2(int qNumber)
     {
         //strips out empty answers
         stripEmpty();
         //adds the question
-        String returnable = question + "\r\n";
+        String returnable = qNumber + ". " + question + "\r\n";
         for(int i = 0; i<answers.size(); i++) {
             //adds the answers
             returnable+= "\t" + (i+1) + ")" + answers.get(i) + "\r\n";
         }
         //returns
         return returnable + "\r\n";
+    }
+    public int incQNumber(int qNumber) {
+        return qNumber + 1;
+    }
+    public String makeKey(int qNumber) {
+        return qNumber + ". " + correctAnswer + "\r\n";
     }
     //scrambles the answers within the code
     public void scrambleAnswers() {
@@ -114,7 +136,7 @@ public class Question
             //random indecies
             int r1 = random.nextInt(10000)%answers.size();
             int r2 = random.nextInt(10000)%answers.size();
-            int ans = correctAnswer;
+            int ans = correctAnswer - 1;
             //checks if the correct answer is or isn't one of the others, if it is it resets it
             if(ans == r1) {
                 correctAnswer = r2 + 1;

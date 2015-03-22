@@ -34,7 +34,7 @@ public class EventTesterPanel extends JFrame
         versions = new JTextField(18);
         title = new JPanel();
         myLabel = new JLabel("<html>This is Olie's test maker! Start by entering the file name, along with<br> the extension"
-                + "(.doc, .docx, .txt), and the number of versions below.</html>");
+                + "(.doc, .txt), and the number of versions below.</html>");
         myLabel.setFont(new Font("Calibri", Font.PLAIN, 18));
         JLabel label1 = new JLabel("File Name: ");
         label1.setFont(new Font("Calibri", Font.PLAIN, 18));
